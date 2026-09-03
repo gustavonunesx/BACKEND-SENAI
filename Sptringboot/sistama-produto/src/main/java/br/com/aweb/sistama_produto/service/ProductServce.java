@@ -9,7 +9,7 @@ import br.com.aweb.sistama_produto.model.Product;
 import br.com.aweb.sistama_produto.repository.ProductRepository;
 
 @Service
-public class ProductServce {
+public class    ProductServce {
 
     @Autowired
     private ProductRepository productRepository;
