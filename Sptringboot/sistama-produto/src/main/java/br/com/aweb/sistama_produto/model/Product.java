@@ -4,10 +4,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Positive;
 
 @Entity
+@Table(name = "products")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,14 +25,19 @@ public class Product {
 
     private String description;
 
+    @NotNull(message = "Stock quantity is mandatory!🤬")
+    @PositiveOrZero(message = "Stock quantity cannot be negative!🤬")
+    private Integer quantity;
+
     public Product() {
     }
 
-    public Product(Long id, String name, Double price, String description) {
+    public Product(Long id, String name, Double price, String description, Integer quantity) {
         this.id = id;
         this.name = name;
         this.price = price;
         this.description = description;
+        this.quantity = quantity;
     }
 
     public Long getId() {
@@ -61,5 +70,13 @@ public class Product {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 }
