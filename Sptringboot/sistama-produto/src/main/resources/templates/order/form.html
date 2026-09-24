@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${orderForm.id == null} ? 'Novo Pedido' : 'Editar Pedido'"></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+    <div class="container">
+        <h1 th:text="${orderForm.id == null} ? 'Novo Pedido' : 'Editar Pedido'"></h1>
+
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+        <form th:action="${orderForm.id == null} ? @{/orders/save} : @{/orders/update/{id}(id=${orderForm.id})}"
+              method="post" class="mt-3">
+
+            <input type="hidden" name="id" th:value="${orderForm.id}" />
+
+            <div class="mb-3">
+                <label for="clientId" class="form-label">Cliente</label>
+                <select id="clientId" name="clientId" class="form-select" required>
+                    <option value="">Selecione um cliente</option>
+                    <option th:each="c : ${clients}" th:value="${c.id}" th:text="${c.fullName}"
+                            th:selected="${c.id == orderForm.clientId}"></option>
+                </select>
+            </div>
+
+            <h5 class="mt-4">Produtos</h5>
+            <table class="table" id="itemsTable">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="itemsBody">
+                    <tr class="item-row" th:each="item, stat : ${orderForm.items}">
+                        <td>
+                            <select th:name="${'items[' + stat.index + '].productId'}" class="form-select" required>
+                                <option value="">Selecione um produto</option>
+                                <option th:each="p : ${products}" th:value="${p.id}"
+                                        th:text="${p.name + ' (estoque: ' + p.quantity + ')'}"
+                                        th:selected="${p.id == item.productId}"></option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" min="1" th:name="${'items[' + stat.index + '].quantity'}"
+                                   th:value="${item.quantity}" class="form-control" required />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-danger remove-row">Remover</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" id="addItemBtn" class="btn btn-sm btn-outline-primary mb-3">Adicionar produto</button>
+
+            <div>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a th:href="@{/orders}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const productsData = /*[[${products}]]*/ [];
+        let itemIndex = /*[[${#lists.size(orderForm.items)}]]*/ 0;
+
+        function buildProductOptions() {
+            let options = '<option value="">Selecione um produto</option>';
+            productsData.forEach(function (p) {
+                options += '<option value="' + p.id + '">' + p.name + ' (estoque: ' + p.quantity + ')</option>';
+            });
+            return options;
+        }
+
+        document.getElementById('addItemBtn').addEventListener('click', function () {
+            const tbody = document.getElementById('itemsBody');
+            const row = document.createElement('tr');
+            row.className = 'item-row';
+            row.innerHTML =
+                '<td><select name="items[' + itemIndex + '].productId" class="form-select" required>' +
+                buildProductOptions() + '</select></td>' +
+                '<td><input type="number" min="1" name="items[' + itemIndex + '].quantity" class="form-control" required /></td>' +
+                '<td><button type="button" class="btn btn-sm btn-danger remove-row">Remover</button></td>';
+            tbody.appendChild(row);
+            itemIndex++;
+        });
+
+        document.getElementById('itemsBody').addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-row')) {
+                const rows = document.querySelectorAll('.item-row');
+                if (rows.length > 1) {
+                    e.target.closest('tr').remove();
+                } else {
+                    alert('O pedido precisa ter ao menos um produto.');
+                }
+            }
+        });
+        /*]]>*/
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

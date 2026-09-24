@@ -3,6 +3,7 @@ package br.com.aweb.sistama_produto.controller;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.aweb.sistama_produto.model.Product;
 import br.com.aweb.sistama_produto.service.ProductServce;
@@ -50,11 +52,13 @@ public class ProductController {
 
     //salva um novo produto
     @PostMapping("/save")
-    public String saveProduct(@Valid @ModelAttribute("product") Product product, BindingResult result) {
+    public String saveProduct(@Valid @ModelAttribute("product") Product product, BindingResult result,
+                              RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "product/form";
         }
         service.saveProduct(product);
+        redirectAttributes.addFlashAttribute("successMessage", "Produto cadastrado com sucesso!");
         return "redirect:/products";
     }
 
@@ -62,18 +66,26 @@ public class ProductController {
     @PostMapping("/update/{id}")
     public String updateProduct(@PathVariable Long id,
                                @Valid @ModelAttribute("product") Product product,
-                               BindingResult result) {
+                               BindingResult result,
+                               RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "product/form";
         }
         service.updateProduct(id, product);
+        redirectAttributes.addFlashAttribute("successMessage", "Produto atualizado com sucesso!");
         return "redirect:/products";
     }
 
     //remove um produto
     @GetMapping("/delete/{id}")
-    public String deleteProduct(@PathVariable Long id) {
-        service.deleteProduct(id);
+    public String deleteProduct(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.deleteProduct(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Produto excluído com sucesso!");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Não é possível excluir: o produto está vinculado a pedidos.");
+        }
         return "redirect:/products";
     }
 

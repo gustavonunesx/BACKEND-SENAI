@@ -3,6 +3,7 @@ package br.com.aweb.sistama_produto.controller;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.aweb.sistama_produto.model.Address;
 import br.com.aweb.sistama_produto.model.Client;
@@ -53,12 +55,14 @@ public class ClientController {
 
     //salva um novo cliente
     @PostMapping("/save")
-    public String saveClient(@Valid @ModelAttribute("client") Client client, BindingResult result) {
+    public String saveClient(@Valid @ModelAttribute("client") Client client, BindingResult result,
+                             RedirectAttributes redirectAttributes) {
         validateUniqueness(client, result);
         if (result.hasErrors()) {
             return "client/form";
         }
         service.saveClient(client);
+        redirectAttributes.addFlashAttribute("successMessage", "Cliente cadastrado com sucesso!");
         return "redirect:/clients";
     }
 
@@ -66,19 +70,27 @@ public class ClientController {
     @PostMapping("/update/{id}")
     public String updateClient(@PathVariable Long id,
                               @Valid @ModelAttribute("client") Client client,
-                              BindingResult result) {
+                              BindingResult result,
+                              RedirectAttributes redirectAttributes) {
         validateUniqueness(client, result);
         if (result.hasErrors()) {
             return "client/form";
         }
         service.updateClient(id, client);
+        redirectAttributes.addFlashAttribute("successMessage", "Cliente atualizado com sucesso!");
         return "redirect:/clients";
     }
 
     //remove um cliente
     @GetMapping("/delete/{id}")
-    public String deleteClient(@PathVariable Long id) {
-        service.deleteClient(id);
+    public String deleteClient(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            service.deleteClient(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Cliente excluído com sucesso!");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Não é possível excluir: o cliente possui pedidos.");
+        }
         return "redirect:/clients";
     }
 
